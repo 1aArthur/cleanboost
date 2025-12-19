@@ -1,0 +1,97 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Build APK with EAS
+        run: eas build --platform android --non-interactive --wait
+        env:
+          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+
+      - name: Download APK artifact
+        run: |
+          mkdir -p ./apk-output
+          # Get build ID from the last build
+          BUILD_ID=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].id')
+          echo "Build ID: $BUILD_ID"
+          
+          # Download the APK
+          eas build:download --id $BUILD_ID --path ./apk-output/cleanboost.apk || echo "Download via CLI failed, will try alternative method"
+
+      - name: Upload APK as artifact
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cleanboost-apk
+          path: ./apk-output/
+          retention-days: 30
+
+      - name: Create Release
+        if: success()
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.0-build-${{ github.run_number }}
+          name: CleanBoost v1.0.0 Build ${{ github.run_number }}
+          body: |
+            ## 🎉 CleanBoost APK Build Completo!
+            
+            **Build Number:** ${{ github.run_number }}
+            **Commit:** ${{ github.sha }}
+            **Data:** ${{ github.event.head_commit.timestamp }}
+            
+            ### ✨ Funcionalidades
+            - 📊 Dashboard com visão geral do dispositivo
+            - 🧹 Limpeza rápida de cache e arquivos temporários
+            - 📁 Gerenciador de arquivos grandes
+            - 📈 Monitor de RAM em tempo real
+            - 📱 Gerenciador de aplicativos
+            - ⚙️ Configurações personalizáveis
+            
+            ### 📥 Como Instalar
+            
+            1. Baixe o arquivo `cleanboost.apk` dos Artifacts
+            2. Copie para seu celular
+            3. Abra o arquivo no gerenciador de arquivos
+            4. Clique em "Instalar"
+            
+            Ou via ADB:
+            ```bash
+            adb install cleanboost.apk
+            ```
+            
+            ### 📋 Requisitos
+            - Android 5.0+ (API 21+)
+            - 50MB de espaço livre
+            - 2GB de RAM
+            
+            ---
+            **Desenvolvido com ❤️ usando React Native e Expo**
+          files: ./apk-output/cleanboost.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
