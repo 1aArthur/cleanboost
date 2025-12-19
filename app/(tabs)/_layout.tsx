@@ -21,14 +21,49 @@ export default function TabLayout() {
         tabBarStyle: {
           paddingBottom: insets.bottom,
           height: 49 + insets.bottom, // Default tab bar height (49) + safe area
+          backgroundColor: Colors[colorScheme ?? "light"].background,
+          borderTopColor: "rgba(255, 255, 255, 0.1)",
+          borderTopWidth: 1,
         },
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="dashboard"
         options={{
-          title: "Home",
+          title: "Início",
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="cleanup"
+        options={{
+          title: "Limpeza",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="trash.fill" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="files"
+        options={{
+          title: "Arquivos",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="folder.fill" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="monitor"
+        options={{
+          title: "Monitor",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.bar.fill" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="apps"
+        options={{
+          title: "Apps",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="square.grid.2x2.fill" color={color} />,
         }}
       />
     </Tabs>
